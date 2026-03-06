@@ -1,0 +1,242 @@
+// SPDX-FileCopyrightText: Copyright Orangebot, Inc. and Medplum contributors
+// SPDX-License-Identifier: Apache-2.0
+import type * as Preset from '@docusaurus/preset-classic';
+import type { Config } from '@docusaurus/types';
+import { themes as prismThemes } from 'prism-react-renderer';
+
+const config: Config = {
+  title: 'Medplum',
+  tagline: 'Fast and easy healthcare dev',
+  url: 'https://www.medplum.com',
+  baseUrl: '/',
+  trailingSlash: false,
+  onBrokenLinks: 'throw',
+  onBrokenAnchors: 'throw',
+  onDuplicateRoutes: 'throw',
+  favicon: 'favicon.ico',
+  organizationName: 'medplum', // Usually your GitHub org/user name.
+  projectName: 'medplum', // Usually your repo name.
+
+  // Set this to true to enable the faster experimental build mode.
+  // https://github.com/facebook/docusaurus/issues/10556
+  future: {
+    v4: true,
+    experimental_faster: true,
+  },
+
+  // Even if you don't use internationalization, you can use this field to set
+  // useful metadata like html lang. For example, if your site is Chinese, you
+  // may want to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          editUrl: 'https://github.com/medplum/medplum/blob/main/packages/docs/',
+          async sidebarItemsGenerator({ defaultSidebarItemsGenerator, ...args }) {
+            // Example: return an hardcoded list of static sidebar items
+            let items = await defaultSidebarItemsGenerator(args);
+            items = items.filter((e) => !(e.type === 'doc' && e.id.endsWith('index')));
+            return items;
+          },
+          showLastUpdateTime: true,
+        },
+        blog: {
+          showReadingTime: true,
+          blogSidebarCount: 15,
+          blogSidebarTitle: 'Recent posts',
+        },
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+        gtag: {
+          trackingID: 'G-SHW0ZNT27G',
+        },
+      },
+    ],
+  ],
+
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: '/img/medplum-apple-touch-icon.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'manifest',
+        href: '/manifest.json',
+      },
+    },
+  ],
+
+  themeConfig: {
+    navbar: {
+      logo: {
+        alt: 'Medplum Logo',
+        src: 'img/logo.svg',
+        width: 24,
+        height: 32,
+      },
+      items: [
+        {
+          to: '/products',
+          label: 'Products',
+          position: 'left',
+        },
+        {
+          to: '/solutions',
+          label: 'Solutions',
+          position: 'left',
+        },
+        {
+          type: 'doc',
+          docId: 'home',
+          position: 'left',
+          label: 'Resources',
+        },
+        {
+          to: '/pricing',
+          label: 'Pricing',
+          position: 'left',
+        },
+        {
+          to: 'https://app.medplum.com/signin',
+          label: 'Sign In',
+          position: 'right',
+          className: 'button button--outline button--primary navbar-btn navbar-btn-outlined',
+        },
+        {
+          to: 'https://cal.com/medplum/demo',
+          label: 'Book a Demo',
+          position: 'right',
+          className: 'button button--primary navbar-btn navbar-btn-filled',
+        },
+      ],
+    },
+    footer: {
+      links: [
+        {
+          title: 'Developers',
+          items: [
+            {
+              label: 'Getting started',
+              to: '/docs/tutorials',
+            },
+            {
+              label: 'Documentation',
+              to: '/docs',
+            },
+            {
+              label: 'Search',
+              to: '/search',
+            },
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {
+              label: 'Case Studies',
+              to: '/case-studies',
+            },
+            {
+              label: 'Discord',
+              to: 'https://discord.gg/medplum',
+            },
+            {
+              label: 'Storybook',
+              to: 'https://storybook.medplum.com/',
+            },
+            {
+              label: 'GitHub',
+              to: 'https://github.com/medplum/medplum',
+            },
+            {
+              label: 'Knowledge Base',
+              to: 'https://linen.medplum.com',
+            },
+            {
+              label: 'Contributing',
+              to: '/docs/contributing',
+            },
+          ],
+        },
+        {
+          title: 'Company',
+          items: [
+            {
+              label: 'About us',
+              to: '/about',
+            },
+            {
+              label: 'Pricing',
+              to: '/pricing',
+            },
+            {
+              label: 'Enterprise',
+              to: '/enterprise',
+            },
+            {
+              label: 'Careers',
+              to: '/careers',
+            },
+            {
+              label: 'Blog',
+              to: '/blog',
+            },
+            {
+              label: 'Brand',
+              to: '/brand',
+            },
+          ],
+        },
+      ],
+      copyright: `© ${new Date().getFullYear()} Orangebot, Inc.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+    },
+    image: 'img/medplum-og-cover-image.png',
+    algolia: {
+      // The application ID provided by Algolia
+      appId: '6A1DXS603N',
+
+      // Public API key: it is safe to commit it
+      apiKey: '75b991071ef4ef1145d63c0a4d0d4665',
+
+      indexName: 'medplum',
+
+      // Optional: see doc section below
+      contextualSearch: true,
+
+      // Optional: Algolia search parameters
+      searchParameters: {},
+
+      // Optional: path for search page that enabled by default (`false` to disable it)
+      searchPagePath: 'search',
+
+      //... other Algolia params
+    },
+  } satisfies Preset.ThemeConfig,
+  markdown: {
+    mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'throw',
+    },
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+};
+
+export default config;

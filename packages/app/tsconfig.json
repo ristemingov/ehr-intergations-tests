@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["vite/client"],
+    "paths": {
+      "@medplum/core": ["../core/src"],
+      "@medplum/react": ["../react/src"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "jest.setup.ts", "vite.config.ts"]
+}

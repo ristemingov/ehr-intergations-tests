@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  ehr:
+        build: 
+            context: .
+            dockerfile: ./Dockerfile
+            args:
+                FHIR_VERSION: "${FHIR_VERSION}"
+                ASSEMBLY_VER: "${ASSEMBLY_VER}"
+                RELEASE: "${RELEASE}"
+        restart: on-failure
+        environment:
+            FHIRServer__Security__Enabled: "false"
+            SqlServer__ConnectionString: "Server=tcp:sql,1433;Initial Catalog=FHIR;Persist Security Info=False;User ID=sa;Password=l0k@fh1rs3rv3r;MultipleActiveResultSets=False;Connection Timeout=30;TrustServerCertificate=true;"
+            SqlServer__AllowDatabaseCreation: "true"
+            SqlServer__Initialize: "true"
+            SqlServer__SchemaOptions__AutomaticUpdatesEnabled: "true"
+            DataStore: "SqlServer"
+        ports:     
+            - "${EHR_PORT}:8080"
+        depends_on:
+            - sql
+
+  sql:
+        image: "mcr.microsoft.com/azure-sql-edge"
+        restart: on-failure
+        environment:
+            SA_PASSWORD: "l0k@fh1rs3rv3r"
+            ACCEPT_EULA: "Y"
+        healthcheck:
+            test: ["CMD", "/opt/mssql-tools/bin/sqlcmd","-U sa -P l0k@fh1rs3rv3r -Q 'SELECT * FROM INFORMATION_SCHEMA.TABLES'"]
+            interval: 10s
+            timeout: 10s
+            retries: 6
+

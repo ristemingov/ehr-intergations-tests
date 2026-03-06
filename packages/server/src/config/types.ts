@@ -1,0 +1,281 @@
+// SPDX-FileCopyrightText: Copyright Orangebot, Inc. and Medplum contributors
+// SPDX-License-Identifier: Apache-2.0
+import type { ClientApplication, ProjectSetting } from '@medplum/fhirtypes';
+import type { KeepJobs } from 'bullmq';
+
+export interface MedplumServerConfig {
+  port: number;
+  baseUrl: string;
+  issuer: string;
+  jwksUrl: string;
+  authorizeUrl: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+  introspectUrl: string;
+  registerUrl: string;
+  appBaseUrl: string;
+  logLevel?: string;
+  binaryStorage?: string;
+  storageBaseUrl: string;
+  signingKey?: string;
+  signingKeyId?: string;
+  signingKeyPassphrase?: string;
+  supportEmail: string;
+  approvedSenderEmails?: string;
+  database: MedplumDatabaseConfig;
+  /** @deprecated specify `database.host` and `database.ssl.require` as needed */
+  databaseProxyEndpoint?: string;
+  readonlyDatabase?: MedplumDatabaseConfig;
+  /** @deprecated specify `readonlyDatabase.host` and `readonlyDatabase.ssl.require` as needed */
+  readonlyDatabaseProxyEndpoint?: string;
+  redis: MedplumRedisConfig;
+  /**
+   * Optional separate Redis config for caching (resource cache, keyvalue store, server registry, etc.).
+   * Falls back to `redis` if not specified.
+   * Separating cache from other purposes can improve performance under high load by isolating cache operations.
+   */
+  cacheRedis?: MedplumRedisConfig;
+  /**
+   * Optional separate Redis config for rate limiting (HTTP rate limiter, FHIR quota, resource cap).
+   * Falls back to `redis` if not specified.
+   * Separating rate limiting from other purposes can improve performance under high load by isolating rate limiting operations.
+   */
+  rateLimitRedis?: MedplumRedisConfig;
+  /**
+   * Optional separate Redis config for pub/sub (websockets, FHIRcast, agent, MCP).
+   * Falls back to `redis` if not specified.
+   * Separating pub/sub from other purposes can improve performance under high load by isolating pub/sub operations.
+   */
+  pubSubRedis?: MedplumRedisConfig;
+  /**
+   * Optional separate Redis config for BullMQ job queues (all background workers).
+   * Falls back to `redis` if not specified.
+   * Separating background job queues from other purposes can improve performance under high load by isolating job queue operations.
+   */
+  backgroundJobsRedis?: MedplumRedisConfig;
+  emailProvider?: 'none' | 'awsses' | 'smtp';
+  smtp?: MedplumSmtpConfig;
+  bullmq?: MedplumBullmqConfig;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  recaptchaSiteKey?: string;
+  recaptchaSecretKey?: string;
+  maxJsonSize: string;
+  maxBatchSize: string;
+  allowedOrigins?: string;
+  awsRegion: string;
+  botLambdaRoleArn: string;
+  botLambdaLayerName: string;
+  botCustomFunctionsEnabled?: boolean;
+  logRequests?: boolean;
+  logAuditEvents?: boolean;
+  saveAuditEvents?: boolean;
+  registerEnabled?: boolean;
+  bcryptHashSalt: number;
+  introspectionEnabled?: boolean;
+  keepAliveTimeout?: number;
+  vmContextBotsEnabled?: boolean;
+  vmContextBaseUrl?: string;
+  shutdownTimeoutMilliseconds?: number;
+  heartbeatMilliseconds?: number;
+  heartbeatEnabled?: boolean;
+  accurateCountThreshold: number;
+  maxSearchOffset?: number;
+  base64BinaryMaxBytes?: number;
+  defaultSuperAdminEmail?: string;
+  defaultSuperAdminPassword?: string;
+  defaultSuperAdminClientId?: string;
+  defaultSuperAdminClientSecret?: string;
+  defaultBotRuntimeVersion: 'awslambda' | 'vmcontext';
+  defaultProjectFeatures?: (
+    | 'aws-comprehend'
+    | 'aws-textract'
+    | 'bots'
+    | 'cron'
+    | 'email'
+    | 'google-auth-required'
+    | 'graphql-introspection'
+    | 'websocket-subscriptions'
+    | 'transaction-bundles'
+  )[];
+  defaultProjectSystemSetting?: ProjectSetting[];
+  /** Number of HTTP requests per minute users can make by default; overridable by Project settings */
+  defaultRateLimit?: number;
+  defaultAuthRateLimit?: number;
+  /** Number of FHIR interaction rate limit units per minute users can consume by default; overridable by Project settings */
+  defaultFhirQuota?: number;
+  /** Optional config for global default for `maxUserWebSocketSubscriptions`; overridable by Project setting: `maxUserWebSocketSubscriptions` */
+  defaultMaxUserWebSocketSubscriptions?: number;
+
+  /** Max length of Bot AuditEvent.outcomeDesc when creating a FHIR Resource */
+  maxBotLogLengthForResource?: number;
+
+  /** Max length of Bot AuditEvent.outcomeDesc when logging to logger */
+  maxBotLogLengthForLogs?: number;
+
+  /** Number of attempts for transactions that fail due to retry-able transaction errors */
+  transactionAttempts?: number;
+
+  /** Number of milliseconds to use as a base for exponential backoff in transaction retries */
+  transactionExpBackoffBaseDelayMs?: number;
+
+  /** Flag to enable/disable the binary storage auto-downloader service (default 'true' for enabled) */
+  autoDownloadEnabled?: boolean;
+
+  /** Flag to enable pre-commit subscriptions for the interceptor pattern (default: false) */
+  preCommitSubscriptionsEnabled?: boolean;
+
+  /** Optional list of external authentication providers. */
+  externalAuthProviders?: MedplumExternalAuthConfig[];
+
+  /** Optional list of default OAuth2 clients */
+  defaultOAuthClients?: ClientApplication[];
+
+  /** Optional flag to enable the MCP server beta */
+  mcpEnabled?: boolean;
+
+  /** Optional config for Fission.io bots */
+  fission?: MedplumFissionConfig;
+
+  /**
+   * Optional minimum LIMIT N for queries generated by FHIR searches.
+   *
+   * Enforce a floor in the LIMIT N clause of FHIR search SQL queries. If the query planner
+   * vastly over estimates how many matching rows exist and we are only asking for a few rows,
+   * the planner may choose a sequential scan since it thinks it will surely find enough
+   * rows without needing to scan much of the table. Increasing the limit has a dramatic
+   * impact on the planner's estimated cost of the sequential scan which makes it more likely
+   * for an alternative, index-based plan to be used.
+   */
+  fhirSearchMinLimit?: number;
+
+  /** Optional flag to discourage seqscan query plans for queries generated by FHIR searches */
+  fhirSearchDiscourageSeqScan?: boolean;
+
+  redactAuditEvents?: boolean;
+
+  /** Optional configuration for array column padding to mitigate statistics issues in Postgres. */
+  arrayColumnPadding?: {
+    [searchParamCode: string]:
+      | { resourceType?: string[]; config: ArrayColumnPaddingConfig }
+      | { resourceType?: string[]; config: ArrayColumnPaddingConfig }[];
+  };
+
+  /** TOTP authenticator window for MFA token validation (default: 1) */
+  mfaAuthenticatorWindow?: number;
+
+  /**
+   * Optional configuration for background worker pools.
+   * Allows running separate server pools for HTTP request serving vs. background job processing.
+   */
+  workers?: MedplumWorkersConfig;
+}
+
+export interface ArrayColumnPaddingConfig {
+  /** Count of distinct padding elements to choose from for padding elements  */
+  readonly m: number;
+  /**
+   * The lambda from the poisson distribution to achieve the desired padding
+   * element frequency with the desired confidence. See {@link https://github.com/medplum/medplum/issues/7539}
+   * or comments in `packages/server/src/fhir/token-column.ts` for in depth discussion.
+   */
+  readonly lambda: number;
+  /** The postgres statistics target for the array column */
+  readonly statisticsTarget: number;
+}
+
+/**
+ * The SSL configuration for the database.
+ */
+export interface MedplumDatabaseSslConfig {
+  ca?: string;
+  key?: string;
+  cert?: string;
+  rejectUnauthorized?: boolean;
+  require?: boolean;
+}
+
+/**
+ * Based on AWS Secrets Manager for databases.
+ * See: https://docs.aws.amazon.com/secretsmanager/latest/userguide/secretsmanager-userguide.pdf
+ */
+export interface MedplumDatabaseConfig {
+  host?: string;
+  port?: number;
+  dbname?: string;
+  username?: string;
+  password?: string;
+  ssl?: MedplumDatabaseSslConfig;
+  queryTimeout?: number;
+  runMigrations?: boolean;
+  /**
+   * Prevent post-deploy migrations from being automatically run after server startup.
+   * Setting this to `true` is not recommended except for advanced use cases.
+   */
+  disableRunPostDeployMigrations?: boolean;
+  maxConnections?: number;
+  disableConnectionConfiguration?: boolean;
+}
+
+export interface MedplumRedisConfig {
+  host?: string;
+  port?: number;
+  password?: string;
+  /** The logical database to use for Redis. See: https://redis.io/commands/select/. Default is `0`. */
+  db?: number;
+  tls?: Record<string, unknown>;
+}
+
+export interface MedplumSmtpConfig {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+}
+
+export interface MedplumBullmqConfig {
+  /**
+   * Amount of jobs that a single worker is allowed to work on in parallel.
+   * @see {@link https://docs.bullmq.io/guide/workers/concurrency}
+   */
+  concurrency?: number;
+  removeOnComplete: KeepJobs;
+  removeOnFail: KeepJobs;
+}
+
+export interface MedplumExternalAuthConfig {
+  readonly issuer: string;
+  readonly userInfoUrl: string;
+}
+
+export type WorkerName =
+  | 'subscription'
+  | 'download'
+  | 'cron'
+  | 'reindex'
+  | 'batch'
+  | 'post-deploy-migration'
+  | 'set-accounts';
+
+export interface MedplumWorkersConfig {
+  /**
+   * Which workers to run on this server instance. Include '*' to enable all workers.
+   * If undefined/omitted: all workers run (backwards compatible default)
+   * Specify an empty array to run no workers e.g. for an HTTP-only pool.
+   */
+  enabled?: (WorkerName | '*')[];
+
+  /**
+   * Per-worker BullMQ overrides, merged on top of global `bullmq` config.
+   * Only takes effect for workers that are enabled.
+   */
+  bullmq?: Partial<Record<WorkerName, Partial<MedplumBullmqConfig>>>;
+}
+
+export interface MedplumFissionConfig {
+  readonly namespace: string;
+  readonly fieldManager: string;
+  readonly environmentName: string;
+  readonly routerHost: string;
+  readonly routerPort: number;
+}
